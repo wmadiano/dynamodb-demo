@@ -1,20 +1,19 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const { createInvoice, getAllInvoices } = require('./models/receiptInvoiceModel'); // Ensure the path matches your project structure
+const {
+  createInvoice,
+  getAllInvoices,
+  getInvoiceById,
+  deleteInvoiceById,
+  updateInvoiceById
+} = require('./models/receiptInvoiceModel'); // Ensure the path matches your project structure
 const cors = require('cors');
 const app = express();
-
 
 const PORT = 3000;
 
 app.use(bodyParser.json());
-
 app.use(cors());
-
-
-// app.use(cors({
-//   origin: 'http://localhost:6000' // adjust this depending on where your frontend is hosted
-// }));
 
 // POST endpoint to create a new invoice
 app.post('/api/receiptinvoice', async (req, res) => {
@@ -36,11 +35,10 @@ app.post('/api/receiptinvoice', async (req, res) => {
   }
 });
 
-app.get('/', async (req, res) => {
+// GET endpoint to retrieve all invoices
+app.get('/api/receiptinvoice', async (req, res) => {
   try {
-    console.log("Fetching invoices...");
     const invoices = await getAllInvoices();
-    console.log("Invoices fetched:", invoices);
     res.status(200).json({
       message: 'Invoices retrieved successfully',
       data: invoices
@@ -51,9 +49,52 @@ app.get('/', async (req, res) => {
   }
 });
 
+// GET endpoint to retrieve an invoice by ID
+app.get('/api/receiptinvoice/:id', async (req, res) => {
+  try {
+    const invoiceId = req.params.id;
+    const invoice = await getInvoiceById(invoiceId);
+    if (invoice) {
+      res.status(200).json({
+        message: 'Invoice retrieved successfully',
+        data: invoice
+      });
+    } else {
+      res.status(404).json({ message: 'Invoice not found' });
+    }
+  } catch (error) {
+    console.error('Error in getting invoice:', error);
+    res.status(500).json({ message: 'Failed to get invoice', error: error.message });
+  }
+});
 
+// DELETE endpoint to delete an invoice by ID
+app.delete('/api/receiptinvoice/:id', async (req, res) => {
+  try {
+    const invoiceId = req.params.id;
+    await deleteInvoiceById(invoiceId);
+    res.status(200).json({ message: 'Invoice deleted successfully' });
+  } catch (error) {
+    console.error('Error in deleting invoice:', error);
+    res.status(500).json({ message: 'Failed to delete invoice', error: error.message });
+  }
+});
 
-
+// PUT endpoint to update an invoice by ID
+app.put('/api/receiptinvoice/:id', async (req, res) => {
+  try {
+    const invoiceId = req.params.id;
+    const updateData = req.body;
+    const updatedInvoice = await updateInvoiceById(invoiceId, updateData);
+    res.status(200).json({
+      message: 'Invoice updated successfully',
+      data: updatedInvoice
+    });
+  } catch (error) {
+    console.error('Error in updating invoice:', error);
+    res.status(500).json({ message: 'Failed to update invoice', error: error.message });
+  }
+});
 
 // Start the server
 app.listen(PORT, () => {
