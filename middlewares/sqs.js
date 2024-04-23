@@ -11,20 +11,43 @@ const sqsClient = new SQSClient({
     }
 });
 
-async function publishToQueue(queue, data) {
+// async function publishToQueue(queue, data) {
+//     const params = {
+//         MessageBody: JSON.stringify(data),
+//         QueueUrl: sqs_url + queue,
+//     };
+
+//     try {
+//         const command = new SendMessageCommand(params);
+//         const result = await sqsClient.send(command);
+//         console.log("Published to SQS queue", result);
+//     } catch (error) {
+//         console.error("Error publishing to SQS queue:", error);
+//     }
+// }
+
+async function publishToQueue(queue, data, isFifo = false) {
     const params = {
-        MessageBody: JSON.stringify(data),
-        QueueUrl: sqs_url + queue,
+        QueueUrl: `${sqs_url}${queue}`, // Ensure you define or have access to `sqs_url` variable
+        MessageBody: JSON.stringify(data)
     };
 
+    if (isFifo) {
+        params.MessageGroupId = 'Group1'; // Customize or parameterize as needed
+        // MessageDeduplicationId can be a unique identifier. Here, using a timestamp as an example
+        params.MessageDeduplicationId = `${Date.now()}-${Math.random()}`; 
+    }
+
+    const command = new SendMessageCommand(params);
+
     try {
-        const command = new SendMessageCommand(params);
         const result = await sqsClient.send(command);
-        console.log("Published to SQS queue", result);
+        // console.log("Published to SQS queue", result);
     } catch (error) {
         console.error("Error publishing to SQS queue:", error);
     }
 }
+  
 
 async function receiveMessages(queue, maxNumberOfMessages, waitTimeSeconds) {
     const params = {
