@@ -6,7 +6,7 @@ const {
   getInvoiceById,
   deleteInvoiceById,
   updateInvoiceById
-} = require('./models/receiptInvoiceModel');
+} = require('./models/bak/receiptInvoiceModel');
 
 const {
   createReceipt,
@@ -14,7 +14,7 @@ const {
   getReceiptById,
   deleteReceiptById,
   updateReceiptById
-} = require('./models/receipt');
+} = require('./controllers/receipt');
 
 const cors = require('cors');
 const app = express();
@@ -130,7 +130,6 @@ app.get('/api/receipt', async (req, res) => {
   try {
     const invoices = await getAllReceipts();
     res.status(200).json({
-      message: 'Receipts retrieved successfully',
       data: invoices
     });
   } catch (error) {

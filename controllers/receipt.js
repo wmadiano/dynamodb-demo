@@ -7,7 +7,7 @@ const {
   DeleteCommand,
   UpdateCommand
 } = require('@aws-sdk/lib-dynamodb');
-const { publishToQueue, receiveMessages, deleteMessage } = require("../middlewares/sqs");
+const { publishToQueue ,receiveMessages, deleteMessage } = require("../middlewares/sqs");
 
 // Initialize the DynamoDB Client
 const dbClient = new DynamoDBClient({ region: 'us-east-1' });
@@ -15,33 +15,39 @@ const dbClient = new DynamoDBClient({ region: 'us-east-1' });
 // Initialize the DynamoDB Document Client
 const docClient = DynamoDBDocumentClient.from(dbClient);
 
-const tableName = 'ReceiptInvoice';
+const tableName = 'receipt';
 
 // Function to create a new invoice
-const createInvoice = async (invoice) => {
+const createReceipt = async (data) => {
+
+  data.line = data.receipt_type + '#' + data.company_code + '#' + data.store_code + '#' + data.terminal_code;   
   const params = {
     TableName: tableName,
-    Item: invoice
+    Item: data
   };
 
   try {
     await docClient.send(new PutCommand(params));
-    console.log("Invoice created:", invoice);
+    console.log("receipt created:", data);
+    // For counter maintenance
+    publishToQueue('receipt-counter-queue', { item: data })
+    .then(() => console.log("Publish successful"))
+    .catch(err => console.error("Error in publishing to queue:", err));
+  
+    // // FIFO
+    // publishToQueue('receipt-series-queue.fifo', { item: data },true)
+    //   .then(() => console.log("Publish successful"))
+    //   .catch(err => console.error("Error in publishing to queue:", err));
 
-    // Publish to SQS
-    await publishToQueue('si-receipt-for-invoice-gen', { item: invoice })
-      .then(() => console.log("Publish successful"))
-      .catch(err => console.error("Error in publishing to queue:", err));
-
-    return invoice;
+    return data;
   } catch (error) {
-    console.error('Error creating invoice:', error);
+    console.error('Error creating receipt:', error);
     throw error;
   }
 };
 
 // Function to retrieve all invoices
-const getAllInvoices = async () => {
+const getAllReceipts = async () => {
   const params = {
     TableName: tableName
   };
@@ -56,7 +62,7 @@ const getAllInvoices = async () => {
 };
 
 // Function to get an invoice by ID
-const getInvoiceById = async (id) => {
+const getReceiptById = async (id) => {
   const params = {
     TableName: tableName,
     Key: { id }
@@ -72,7 +78,7 @@ const getInvoiceById = async (id) => {
 };
 
 // Function to delete an invoice by ID
-const deleteInvoiceById = async (id) => {
+const deleteReceiptById = async (id) => {
   const params = {
     TableName: tableName,
     Key: { id }
@@ -88,7 +94,7 @@ const deleteInvoiceById = async (id) => {
 };
 
 // Function to update an invoice by ID
-const updateInvoiceById = async (id, updateData) => {
+const updateReceiptById = async (id, updateData) => {
   const updateExpression = Object.keys(updateData).map(key => `#${key} = :${key}`).join(', ');
   const expressionAttributeNames = Object.keys(updateData).reduce((acc, key) => {
     acc[`#${key}`] = key;
@@ -119,9 +125,9 @@ const updateInvoiceById = async (id, updateData) => {
 };
 
 module.exports = {
-  createInvoice,
-  getAllInvoices,
-  getInvoiceById,
-  deleteInvoiceById,
-  updateInvoiceById
+  createReceipt,
+  getAllReceipts,
+  getReceiptById,
+  deleteReceiptById,
+  updateReceiptById
 };

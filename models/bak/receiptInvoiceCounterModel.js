@@ -1,4 +1,4 @@
-const { docClient } = require('../config/dynamodb');
+const { docClient } = require('../../config/dynamodb');
 
 const tableName = 'ReceiptInvoiceCounter';
 
@@ -45,16 +45,3 @@ module.exports = {
   getCounter
 };
 
-
-
-// aws dynamodb create-table \
-//     --table-name ReceiptInvoiceCounter \
-//     --attribute-definitions \
-//         AttributeName=company_code,AttributeType=S \
-//         AttributeName=store_code_terminal_code,AttributeType=S \
-//     --key-schema \
-//         AttributeName=company_code,KeyType=HASH \
-//         AttributeName=store_code_terminal_code,KeyType=RANGE \
-//     --billing-mode PAY_PER_REQUEST \
-//     --sse-specification Enabled=true \
-//     --region us-east-1

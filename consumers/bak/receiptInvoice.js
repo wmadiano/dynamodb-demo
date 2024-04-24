@@ -1,7 +1,7 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, TransactWriteCommand, GetCommand } = require("@aws-sdk/lib-dynamodb");
-const { zeroPadNumber } = require("../utils/numberUtils");
-const { receiveMessages, deleteMessage } = require("../middlewares/sqs");
+const { zeroPadNumber } = require("../../utils/numberUtils");
+const { receiveMessages, deleteMessage } = require("../../middlewares/sqs");
 
 // const client = new DynamoDBClient();
 const client = new DynamoDBClient({ region: 'us-east-1' });

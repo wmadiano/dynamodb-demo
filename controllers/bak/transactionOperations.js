@@ -1,4 +1,4 @@
-const { docClient } = require('../config/dynamodb');
+const { docClient } = require('../../config/dynamodb');
 
 const updateCounterAndCreateInvoice = async (counterKey, invoiceData) => {
   const transactParams = {
