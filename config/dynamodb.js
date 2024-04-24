@@ -18,6 +18,9 @@
 // module.exports = { docClient };
 
 
+require('dotenv').config();
+
+
 
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient } = require('@aws-sdk/lib-dynamodb');

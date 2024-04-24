@@ -1,17 +1,17 @@
-const { CreateTableCommand } = require('@aws-sdk/client-dynamodb');
-// const { docClient } = require("../config/dynamodb");
+const { CreateTableCommand, DescribeTableCommand } = require('@aws-sdk/client-dynamodb');
 const { ddbClient } = require("../config/dynamodb");
 
 async function createReceiptTable() {
+    const tableName = 'receipt2';
     const params = {
-        TableName: 'receipt2',
+        TableName: tableName,
         AttributeDefinitions: [
             { AttributeName: 'id', AttributeType: 'S' },
-            { AttributeName: 'line', AttributeType: 'N' }, // assuming 'line' is a numeric field
+            { AttributeName: 'line', AttributeType: 'S' },
             { AttributeName: 'receipt_number', AttributeType: 'S' }
         ],
         KeySchema: [
-            { AttributeName: 'id', KeyType: 'HASH' } // Partition key
+            { AttributeName: 'id', KeyType: 'HASH' }
         ],
         GlobalSecondaryIndexes: [
             {
@@ -20,7 +20,7 @@ async function createReceiptTable() {
                     { AttributeName: 'line', KeyType: 'HASH' }
                 ],
                 Projection: {
-                    ProjectionType: 'ALL' // Project all attributes to the index
+                    ProjectionType: 'ALL'
                 }
             },
             {
@@ -29,18 +29,29 @@ async function createReceiptTable() {
                     { AttributeName: 'receipt_number', KeyType: 'HASH' }
                 ],
                 Projection: {
-                    ProjectionType: 'ALL' // Project all attributes to the index
+                    ProjectionType: 'ALL'
                 }
             }
         ],
-        BillingMode: 'PAY_PER_REQUEST' // Enables on-demand pricing
+        BillingMode: 'PAY_PER_REQUEST'
     };
 
     try {
-        const data = await ddbClient.send(new CreateTableCommand(params));
-        console.log(`Table Created: ${data.TableDescription.TableName}`);
-    } catch (err) {
-        console.error("Error", err);
+        // Check if the table already exists
+        await ddbClient.send(new DescribeTableCommand({ TableName: tableName }));
+        console.log(`Table ${tableName} already exists.`);
+    } catch (error) {
+        if (error.name === 'ResourceNotFoundException') {
+            // Table does not exist, so create it
+            try {
+                const data = await ddbClient.send(new CreateTableCommand(params));
+                console.log(`Table Created: ${data.TableDescription.TableName}`);
+            } catch (createError) {
+                console.error("Error creating table", createError);
+            }
+        } else {
+            console.error("Error checking table", error);
+        }
     }
 }
 
